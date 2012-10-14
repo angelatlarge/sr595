@@ -1,6 +1,6 @@
 #include "sr595.h"
-#include <stdlib.h>
-#include <string.h>
+//~ #include <stdlib.h>
+//~ #include <string.h>
 
 sr595::sr595(uint8_t nCascadeCount, uint8_t fParallel, volatile uint8_t *ptrPort, volatile uint8_t *ptrDir, uint8_t nOE, uint8_t nDS, uint8_t nSHCP, uint8_t anSTCP[])
 {
@@ -9,10 +9,10 @@ sr595::sr595(uint8_t nCascadeCount, uint8_t fParallel, volatile uint8_t *ptrPort
 	m_nOE			= nOE;
 	m_nDS			= nDS;
 	m_nSHCP			= nSHCP;
-	m_anSTCP 		= (uint8_t *)malloc(nCascadeCount);
-	memcpy(m_anSTCP, anSTCP, nCascadeCount);
+	for (int i = 0; i<nCascadeCount; i++) {
+		m_anSTCP[i] = anSTCP[i];
+	}
 	m_fParallel 	= fParallel;
-	m_anData 		= (uint8_t *)malloc(nCascadeCount);
 	
 	// Set the port to output
 	m_nPortBitMask = 0;
@@ -42,11 +42,6 @@ sr595::sr595(uint8_t nCascadeCount, uint8_t fParallel, volatile uint8_t *ptrPort
 	}
 	
 }
-
-sr595::~sr595() {
-	free(m_anSTCP);
-}
-		
 
 void sr595::writeByte(uint8_t nIndex, uint8_t nData)
 {
