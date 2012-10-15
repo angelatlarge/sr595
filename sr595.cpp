@@ -1,6 +1,4 @@
 #include "sr595.h"
-//~ #include <stdlib.h>
-//~ #include <string.h>
 
 sr595::sr595(uint8_t nCascadeCount, uint8_t fParallel, volatile uint8_t *ptrPort, volatile uint8_t *ptrDir, uint8_t nOE, uint8_t nDS, uint8_t nSHCP, uint8_t anSTCP[])
 {
@@ -18,7 +16,7 @@ sr595::sr595(uint8_t nCascadeCount, uint8_t fParallel, volatile uint8_t *ptrPort
 	m_nPortBitMask = 0;
 	m_nPortBitMask = m_nOE | m_nDS | m_nSHCP;
 	for (int i=0; i<m_nCascadeCount; i++) {
-		m_nPortBitMask |= m_anSTCP[i];
+		m_nPortBitMask |= (1<<m_anSTCP[i]);
 	}
 	*ptrDir = m_nPortBitMask;
 	// Write zeros to all port values
@@ -26,6 +24,11 @@ sr595::sr595(uint8_t nCascadeCount, uint8_t fParallel, volatile uint8_t *ptrPort
 	
 	// Disable output
 	OE_HI();
+	
+	// Lower all STCP lines
+	for (int i=0; i<m_nCascadeCount; i++) {
+		STCP_LO(i);
+	}
 	
 /*	
 #define DDRC 
