@@ -72,9 +72,12 @@ void sr595::writeByte(uint8_t nIndex, uint8_t nData)
 void sr595::writeData(uint8_t nStartIndex, uint8_t nCount, uint8_t anData[])
 {
 	uint8_t fSentEarlier = 0;
+	int8_t nHighestLoaded = -1;
+	uint8_t nSTCPmask = 0;
 	for (int nByte = nStartIndex + nCount - 1; nByte >=0 ; nByte--) {
 		if (fSentEarlier || (m_anData[nByte] != anData[nByte-nStartIndex])) {
 			fSentEarlier = 1;
+			if (nByte > nHighestLoaded) { nHighestLoaded = nByte; }
 			m_anData[nByte] = anData[nByte-nStartIndex];
 			for (int nBit=7; nBit>=0; nBit--) {
 				SHCP_LO();
@@ -87,20 +90,28 @@ void sr595::writeData(uint8_t nStartIndex, uint8_t nCount, uint8_t anData[])
 			}
 			
 			if (m_fParallel) {
+				if (m_OeDisableDuringLoad) { OE_HI(); }
 				STCP_HI(nByte);
 				SHCP_LO();
 				STCP_LO(nByte);		
+				if (m_OeDisableDuringLoad) { OE_LO(); }
 				if (nByte <=nStartIndex) break;
+			} else {
+				nSTCPmask |= (1<<m_anSTCP[nByte]);
 			}
 		}
 	}
 	if (!m_fParallel) {
-		for (int nByte = nStartIndex + nCount - 1; nByte >=nStartIndex ; nByte--) {
-			STCP_HI(nByte);
-		}		
+		if (m_OeDisableDuringLoad) { OE_HI(); }
+		*m_ptrPort |=  nSTCPmask;
+		//~ for (int nByte = nHighestLoaded; nByte >=nStartIndex ; nByte--) {
+			//~ STCP_HI(nByte);
+		//~ }		
 		SHCP_LO();
-		for (int nByte = nStartIndex + nCount - 1; nByte >=nStartIndex ; nByte--) {
-			STCP_LO(nByte);
-		}		
+		*m_ptrPort &=  (~nSTCPmask);
+		//~ for (int nByte = nHighestLoaded; nByte >=nStartIndex ; nByte--) {
+			//~ STCP_LO(nByte);
+		//~ }		
+		if (m_OeDisableDuringLoad) { OE_LO(); }
 	}
 }

@@ -12,6 +12,7 @@ class sr595
 	protected:
 		uint8_t m_nCascadeCount;
 		volatile uint8_t *m_ptrPort;
+		uint8_t m_OeDisableDuringLoad;
 		uint8_t m_nOE;
 		uint8_t m_nDS;
 		uint8_t m_nSHCP;
@@ -31,7 +32,7 @@ class sr595
 	public:
 		void setOutput(uint8_t nOutput) {
 			if (nOutput != m_fOutput) {
-				if (m_fOutput = nOutput) {				/* Assign AND TEST */
+				if ( (m_fOutput = nOutput) ) {				/* Assign AND TEST */
 					OE_LO();
 				} else {
 					OE_HI();
@@ -39,12 +40,14 @@ class sr595
 			}
 		}
 		void toggleOutput() {
-			if (m_fOutput = (m_fOutput != 0) ^ 1) {	
+			if ( (m_fOutput = (m_fOutput != 0)) ^ 1) {	/* Assign AND TEST */
 				OE_LO();
 			} else {
 				OE_HI();
 			}
 		}
+		uint8_t getOeDisableDuringLoad() { return m_OeDisableDuringLoad; }
+		void	setOeDisableDuringLoad(uint8_t nNewVal) { m_OeDisableDuringLoad = nNewVal; }
 		
 };
 #endif sr595_h
