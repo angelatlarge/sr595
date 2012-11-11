@@ -1,10 +1,11 @@
 #include "sr595.h"
 
-sr595::sr595(uint8_t nCascadeCount, uint8_t fParallel, volatile uint8_t *ptrPort, volatile uint8_t *ptrDir, uint8_t nOE, uint8_t nDS, uint8_t nSHCP, uint8_t anSTCP[])
+sr595::sr595(uint8_t nCascadeCount, uint8_t fParallel, volatile uint8_t *ptrPort, volatile uint8_t *ptrDir, uint8_t nOE, uint8_t nInvertOE, uint8_t nDS, uint8_t nSHCP, uint8_t anSTCP[])
 {
 	m_nCascadeCount	= nCascadeCount;
 	m_ptrPort		= ptrPort;
 	m_nOE			= nOE;
+	m_nInvertOE		= nInvertOE;
 	m_nDS			= nDS;
 	m_nSHCP			= nSHCP;
 	for (int i = 0; i<nCascadeCount; i++) {
@@ -18,7 +19,7 @@ sr595::sr595(uint8_t nCascadeCount, uint8_t fParallel, volatile uint8_t *ptrPort
 	for (int i=0; i<m_nCascadeCount; i++) {
 		m_nPortBitMask |= (1<<m_anSTCP[i]);
 	}
-	*ptrDir = m_nPortBitMask;
+	*ptrDir |= m_nPortBitMask;
 	// Write zeros to all port values
 	*m_ptrPort &= 0x00 | (~m_nPortBitMask);
 	
