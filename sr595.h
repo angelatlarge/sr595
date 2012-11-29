@@ -51,4 +51,4 @@ class sr595
 		void	setOeDisableDuringLoad(uint8_t nNewVal) { m_OeDisableDuringLoad = nNewVal; }
 		
 };
-#endif sr595_h
+#endif /* sr595_h */
