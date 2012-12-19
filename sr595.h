@@ -6,9 +6,20 @@
 class sr595
 {
 	public:
-		sr595(uint8_t nCascadeCount, uint8_t fParallel, volatile uint8_t *ptrPort, volatile uint8_t *ptrDir, uint8_t nOE, uint8_t nInvertOE, uint8_t nDS, uint8_t nSHCP, uint8_t anSTCP[]);
+		sr595(
+			uint8_t nCascadeCount, 
+			uint8_t fParallel, 
+			volatile uint8_t *ptrPort, 
+			volatile uint8_t *ptrDir, 
+			uint8_t nOE, 
+			uint8_t nInvertOE, 
+			uint8_t nDS, 
+			uint8_t nSHCP, 
+			const uint8_t anSTCP[]);
 		void writeByte(uint8_t nIndex, uint8_t nData);	
+		uint8_t getByte(uint8_t nIndex) { return m_anData[nIndex]; }
 		void writeData(uint8_t nStartIndex, uint8_t nCount, uint8_t anData[]);	
+		void forceClearAll();
 	protected:
 		uint8_t m_nCascadeCount;
 		volatile uint8_t *m_ptrPort;

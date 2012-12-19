@@ -1,6 +1,6 @@
 #include "sr595.h"
 
-sr595::sr595(uint8_t nCascadeCount, uint8_t fParallel, volatile uint8_t *ptrPort, volatile uint8_t *ptrDir, uint8_t nOE, uint8_t nInvertOE, uint8_t nDS, uint8_t nSHCP, uint8_t anSTCP[])
+sr595::sr595(uint8_t nCascadeCount, uint8_t fParallel, volatile uint8_t *ptrPort, volatile uint8_t *ptrDir, uint8_t nOE, uint8_t nInvertOE, uint8_t nDS, uint8_t nSHCP, const uint8_t anSTCP[])
 {
 	m_nCascadeCount	= nCascadeCount;
 	m_ptrPort		= ptrPort;
@@ -68,6 +68,15 @@ void sr595::writeByte(uint8_t nIndex, uint8_t nData)
 		STCP_LO(nIndex);		
 	}
 	
+}
+
+void sr595::forceClearAll() {
+	for (uint8_t i=0;i<m_nCascadeCount;i++) {
+		if (m_anData[i] == 0) {
+			m_anData[i] = 0xFF;
+		}
+		writeByte(i, 0x00);
+	}
 }
 
 void sr595::writeData(uint8_t nStartIndex, uint8_t nCount, uint8_t anData[])
