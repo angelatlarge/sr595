@@ -16,10 +16,6 @@
 // along with sr595 library.  If not, see <http://www.gnu.org/licenses/>.
 
 
-/*
-	DDR DOES NOT WORK
-	writeData is buggy
-*/
 
 #include "sr595.h"
 sr595::sr595(
@@ -63,15 +59,6 @@ sr595::sr595(
 		STCP_LO(i);
 	}
 	
-/*	
-#define DDRC 
-#define PORTC _SFR_IO8(0x15)
-
-#define PORTD _SFR_IO8(0x12)
-#define DDRD _SFR_IO8(0x11)
-
-#define DDRB _SFR_IO8(0x17)
-*/	
 	// Assume shift registers read all zeros
 	for (int i=0; i<m_nCascadeCount; i++) {
 		m_anData[i]=0;
@@ -108,13 +95,18 @@ void sr595::forceClearAll() {
 	}
 }
 
-void sr595::writeData(uint8_t nStartIndex, uint8_t nCount, uint8_t anData[])
-{
-	uint8_t fSentEarlier = 0;
+
+void sr595::writeData(uint8_t nStartIndex, uint8_t nCount, uint8_t anData[], uint8_t nForce){
 	uint8_t nSTCPmask = 0;
+	uint8_t fPrevByteSent = 0;
 	for (int nByte = nStartIndex + nCount - 1; nByte >=0 ; nByte--) {
-		if (fSentEarlier || (m_anData[nByte] != anData[nByte-nStartIndex])) {
-			fSentEarlier = 1;
+		if (
+				nForce 											// 1. If data write is forced, then we write
+			|| (fPrevByteSent && (m_fParallel))					// 2. If we have a parallel connection, and we sent a byte already
+																// 		we must write all subsequent bytes
+			|| m_anData[nByte] != anData[nByte-nStartIndex])	// 3. Cached value is not the same
+		{
+			fPrevByteSent = 1;
 			m_anData[nByte] = anData[nByte-nStartIndex];
 			for (int nBit=7; nBit>=0; nBit--) {
 				SHCP_LO();
@@ -136,41 +128,6 @@ void sr595::writeData(uint8_t nStartIndex, uint8_t nCount, uint8_t anData[])
 			} else {
 				nSTCPmask |= (1<<m_anSTCP[nByte]);
 			}
-		}
-	}
-	if (!m_fParallel) {
-		if (m_OeDisableDuringLoad) { OE_HI(); }
-		*m_ptrPort |=  nSTCPmask;
-		SHCP_LO();
-		*m_ptrPort &=  (~nSTCPmask);
-		if (m_OeDisableDuringLoad) { OE_LO(); }
-	}
-}
-
-
-void sr595::forceWriteData(uint8_t nStartIndex, uint8_t nCount, uint8_t anData[]){
-	uint8_t nSTCPmask = 0;
-	for (int nByte = nStartIndex + nCount - 1; nByte >=0 ; nByte--) {
-		m_anData[nByte] = anData[nByte-nStartIndex];
-		for (int nBit=7; nBit>=0; nBit--) {
-			SHCP_LO();
-			if (m_anData[nByte] & (0x01 << nBit)) {
-				DS_HI();
-			} else {
-				DS_LO();
-			}
-			SHCP_HI();
-		}
-		
-		if (m_fParallel) {
-			if (m_OeDisableDuringLoad) { OE_HI(); }
-			STCP_HI(nByte);
-			SHCP_LO();
-			STCP_LO(nByte);		
-			if (m_OeDisableDuringLoad) { OE_LO(); }
-			if (nByte <=nStartIndex) break;
-		} else {
-			nSTCPmask |= (1<<m_anSTCP[nByte]);
 		}
 	}
 	if (!m_fParallel) {

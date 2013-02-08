@@ -23,6 +23,14 @@
 #define SR595_CASCADE_MAX	5
 #endif
 
+/*
+	Todo:
+		* DDR does not work
+		* I have a fast serial write method I need to paste in here.
+		* Need more connection types: parallel DS
+		* Need compile-time connection decisions to shrink code size and improve execution speed
+		* m_nInvertOE is not honored everywhere
+*/
 
 class sr595
 {
@@ -39,7 +47,7 @@ class sr595
 			const uint8_t anSTCP[]);
 		void writeByte(uint8_t nIndex, uint8_t nData, uint8_t force = 0);	
 		uint8_t getByte(uint8_t nIndex) { return m_anData[nIndex]; }
-		void writeData(uint8_t nStartIndex, uint8_t nCount, uint8_t anData[]);	
+		void writeData(uint8_t nStartIndex, uint8_t nCount, uint8_t anData[], uint8_t nForce = 0);
 		void forceWriteData(uint8_t nStartIndex, uint8_t nCount, uint8_t anData[]);	
 		void forceClearAll();
 	protected:
