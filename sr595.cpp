@@ -1,6 +1,38 @@
-#include "sr595.h"
+// Copyright (c) 2012 All Right Reserved, Kirill Shklovsky
+// 
+// This file is part of sr595 library for AVR.
 
-sr595::sr595(uint8_t nCascadeCount, uint8_t fParallel, volatile uint8_t *ptrPort, volatile uint8_t *ptrDir, uint8_t nOE, uint8_t nInvertOE, uint8_t nDS, uint8_t nSHCP, const uint8_t anSTCP[])
+// sr595 library is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// sr595 library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with sr595 library.  If not, see <http://www.gnu.org/licenses/>.
+
+
+/*
+	DDR DOES NOT WORK
+	writeData is buggy
+*/
+
+#include "sr595.h"
+sr595::sr595(
+	uint8_t nCascadeCount, 
+	uint8_t fParallel, 
+	volatile uint8_t *ptrPort, 
+	volatile uint8_t *ptrDir,
+	uint8_t nOE, 
+	uint8_t nInvertOE, 
+	uint8_t nDS, 
+	uint8_t nSHCP, 
+	const uint8_t anSTCP[]
+)
 {
 	m_nCascadeCount	= nCascadeCount;
 	m_ptrPort		= ptrPort;
@@ -47,9 +79,9 @@ sr595::sr595(uint8_t nCascadeCount, uint8_t fParallel, volatile uint8_t *ptrPort
 	
 }
 
-void sr595::writeByte(uint8_t nIndex, uint8_t nData)
+void sr595::writeByte(uint8_t nIndex, uint8_t nData, uint8_t force)
 {
-	if (m_anData[nIndex] != nData) {
+	if (m_anData[nIndex] != nData || force) {
 		m_anData[nIndex] = nData;
 		for (int nByte = nIndex; nByte>=0; nByte--) {
 			for (int nBit=7; nBit>=0; nBit--) {
@@ -72,22 +104,17 @@ void sr595::writeByte(uint8_t nIndex, uint8_t nData)
 
 void sr595::forceClearAll() {
 	for (uint8_t i=0;i<m_nCascadeCount;i++) {
-		if (m_anData[i] == 0) {
-			m_anData[i] = 0xFF;
-		}
-		writeByte(i, 0x00);
+		writeByte(i, 0x00, 1);
 	}
 }
 
 void sr595::writeData(uint8_t nStartIndex, uint8_t nCount, uint8_t anData[])
 {
 	uint8_t fSentEarlier = 0;
-	int8_t nHighestLoaded = -1;
 	uint8_t nSTCPmask = 0;
 	for (int nByte = nStartIndex + nCount - 1; nByte >=0 ; nByte--) {
 		if (fSentEarlier || (m_anData[nByte] != anData[nByte-nStartIndex])) {
 			fSentEarlier = 1;
-			if (nByte > nHighestLoaded) { nHighestLoaded = nByte; }
 			m_anData[nByte] = anData[nByte-nStartIndex];
 			for (int nBit=7; nBit>=0; nBit--) {
 				SHCP_LO();
@@ -114,14 +141,43 @@ void sr595::writeData(uint8_t nStartIndex, uint8_t nCount, uint8_t anData[])
 	if (!m_fParallel) {
 		if (m_OeDisableDuringLoad) { OE_HI(); }
 		*m_ptrPort |=  nSTCPmask;
-		//~ for (int nByte = nHighestLoaded; nByte >=nStartIndex ; nByte--) {
-			//~ STCP_HI(nByte);
-		//~ }		
 		SHCP_LO();
 		*m_ptrPort &=  (~nSTCPmask);
-		//~ for (int nByte = nHighestLoaded; nByte >=nStartIndex ; nByte--) {
-			//~ STCP_LO(nByte);
-		//~ }		
+		if (m_OeDisableDuringLoad) { OE_LO(); }
+	}
+}
+
+
+void sr595::forceWriteData(uint8_t nStartIndex, uint8_t nCount, uint8_t anData[]){
+	uint8_t nSTCPmask = 0;
+	for (int nByte = nStartIndex + nCount - 1; nByte >=0 ; nByte--) {
+		m_anData[nByte] = anData[nByte-nStartIndex];
+		for (int nBit=7; nBit>=0; nBit--) {
+			SHCP_LO();
+			if (m_anData[nByte] & (0x01 << nBit)) {
+				DS_HI();
+			} else {
+				DS_LO();
+			}
+			SHCP_HI();
+		}
+		
+		if (m_fParallel) {
+			if (m_OeDisableDuringLoad) { OE_HI(); }
+			STCP_HI(nByte);
+			SHCP_LO();
+			STCP_LO(nByte);		
+			if (m_OeDisableDuringLoad) { OE_LO(); }
+			if (nByte <=nStartIndex) break;
+		} else {
+			nSTCPmask |= (1<<m_anSTCP[nByte]);
+		}
+	}
+	if (!m_fParallel) {
+		if (m_OeDisableDuringLoad) { OE_HI(); }
+		*m_ptrPort |=  nSTCPmask;
+		SHCP_LO();
+		*m_ptrPort &=  (~nSTCPmask);
 		if (m_OeDisableDuringLoad) { OE_LO(); }
 	}
 }

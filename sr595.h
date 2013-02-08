@@ -1,8 +1,29 @@
+// Copyright (c) 2012 All Right Reserved, Kirill Shklovsky
+// 
+// This file is part of sr595 library for AVR.
+
+// sr595 library is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// sr595 library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with sr595 library.  If not, see <http://www.gnu.org/licenses/>.
+
 #ifndef sr595_h
 #define sr595_h
 #include <avr/io.h>
 
+#ifndef SR595_CASCADE_MAX
 #define SR595_CASCADE_MAX	5
+#endif
+
+
 class sr595
 {
 	public:
@@ -16,9 +37,10 @@ class sr595
 			uint8_t nDS, 
 			uint8_t nSHCP, 
 			const uint8_t anSTCP[]);
-		void writeByte(uint8_t nIndex, uint8_t nData);	
+		void writeByte(uint8_t nIndex, uint8_t nData, uint8_t force = 0);	
 		uint8_t getByte(uint8_t nIndex) { return m_anData[nIndex]; }
 		void writeData(uint8_t nStartIndex, uint8_t nCount, uint8_t anData[]);	
+		void forceWriteData(uint8_t nStartIndex, uint8_t nCount, uint8_t anData[]);	
 		void forceClearAll();
 	protected:
 		uint8_t m_nCascadeCount;
