@@ -102,8 +102,8 @@ void sr595::writeData(uint8_t nStartIndex, uint8_t nCount, uint8_t anData[], uin
 	for (int nByte = nStartIndex + nCount - 1; nByte >=0 ; nByte--) {
 		if (
 				nForce 											// 1. If data write is forced, then we write
-			|| (fPrevByteSent && (m_fParallel))					// 2. If we have a parallel connection, and we sent a byte already
-																// 		we must write all subsequent bytes
+			|| (fPrevByteSent && (!m_fParallel))				// 2. If we have a serial connection, and we sent a byte already
+																// 		(in serial connection we must write all subsequent bytes)
 			|| m_anData[nByte] != anData[nByte-nStartIndex])	// 3. Cached value is not the same
 		{
 			fPrevByteSent = 1;
