@@ -30,6 +30,21 @@
 		* Need more connection types: parallel DS
 		* Need compile-time connection decisions to shrink code size and improve execution speed
 		* m_nInvertOE is not honored everywhere
+		
+	Possible connection types
+		* DS line connection
+			* Serial shift registers (one data line, Q7S of SRn is connected to DS of SRn+1
+			* Parallel shift registers (one data line, connected to *all* DSs of all SRs)
+			* Parallel shift registers: independent DS lines 
+		* Assume that SHCP is always shared
+		* Could have shared or independent STCP lines
+		* Could have shared or independent MR and OE lines
+		
+	Temp_display_C
+		* Separate STCP lines
+		* Serial data connection
+		* Shared OE lines
+		
 */
 
 class sr595
